@@ -1,147 +1,115 @@
 #include <iostream>
-#include <list>
-#include <tuple>
-using namespace std;
+#include <numeric>
+int knapSack(int wt[], int val[], int n, int W);
 
-//structs for graph parts
-struct Edge
-{
-    int source;
-    int destination;
-    int weight;
-    tuple<int, int> pair;
+int MCRec(int total, int coins[], int size);
 
-    Edge(int s, int d, int wt)
-    {
-        source = s;
-        destination = d;
-        weight = wt;
-        pair = make_tuple(source, destination);
-    }
-
-    friend std::ostream& operator<<(ostream& print, const Edge &edge);
-
-   // ~Edge();
-};
-std::ostream& operator<<(ostream& print, const Edge &edge)
-{
-    print << '|' << edge.source << '|' << edge.destination << '|' << edge.weight << "\n";
-    return print;
-}
-struct Graph
-{
-    int nodes = 0;
-    list<Edge> adjacency;
-
-    Graph(int n)
-    {
-        nodes = n;
-    }
-
-    //~Graph();
-};
-
-//make graph
-void makeGraph(int edges, Graph &);
-void addEdge(int u, int v, int weight, Graph &);
-
-//helpers
-void printGraph(Graph);
-bool isEdge(Graph graph, int i, int j, int &weight);
-
-//algorithms
-int longestPath(const Graph &, int &);
-int countLongestPath(int, const Graph &, int []);
 
 int main() {
 
-    //make graph section
-    int nodes, edges;
-    cin >> nodes >> edges;
-
-    Graph graph(nodes);
-    makeGraph(edges, graph);
+    int total, size;
+    int coins[size + 1];
 
 
-    //find the longest path algorithms
-    int count = 0;
-    int length = longestPath(graph, count);
+    std::cin >> total >> size;
 
-    //final output
-    cout << "longest path: " << length << "\n";
-    cout << "number of longest paths: " << count << "\n";
-}
+    int MC[total + 1][size + 1];
 
-void makeGraph(int edges, Graph &graph)
-{
-    int u,v,weight;
-    for(int i = 0; i < edges; i++)
-    {
-       std::cin >> u >> v >> weight;
-       addEdge(u,v,weight, graph);
-    }
-}
 
-void addEdge(int u, int v, int weight, Graph &graph)
-{
-    Edge edge(u,v,weight);
-    graph.adjacency.push_back(edge);
-}
 
-void printGraph(Graph graph)
-{
-    std::cout << "Adjacency list in |source|destination|weight| format: " << "\n";
-    for (list<Edge>::iterator i = graph.adjacency.begin(); i != graph.adjacency.end(); i++)
-    {
-       cout << *i;
-    }
-}
-
-int longestPath(const Graph &graph, int & count)
-{
-    //set the longest path property for each node
-    int lPath[graph.nodes];
-    lPath[0] = 0;
-
-    for (int i = 1; i <= graph.nodes; i++)
-    {
-        lPath[i] = 0;
+    for (int k = 0; k < size + 1; k++) {
+        for (int t = 0; t < total + 1; t++) {
+            MC[t][k] = 0;
+        }
     }
 
-    int weight = 0;
 
-    for (int i = 1; i < (graph.nodes+1); i++)
-    {
-        for (int j = i+1; j < (graph.nodes+1); j++)
-        {
-            if (isEdge(graph, i, j, weight))
-            {
-                lPath[j] = std::max(lPath[j], (lPath[i] + weight));
+    for (int k = 0; k < size; k++) {
+        for (int t = 0; t < total; t++) {
+            for (int i = 1; i <= 5; i++) {
+                int store = MC[t][k];
+                MC[t][k] = std::max(MC[t][k - 1],
+                        (MC[t - coins[k]][k - 1]));
+                if(store > MC[t][k])
+                {
+                    MC[t][k] = store;
+                }
             }
         }
     }
 
-    count = countLongestPath(lPath[graph.nodes-1], graph, lPath);
-    return lPath[graph.nodes];
-}
-
-int countLongestPath(int length, const Graph &graph, int lPath[])
-{
-    return 0;
-}
-
-bool isEdge(Graph graph, int i, int j, int &weight)
-{
-    for(list<Edge>::iterator l = graph.adjacency.begin(); l != graph.adjacency.end(); l++)
-    {
-        tuple<int,int> ij;
-        ij = make_tuple(i,j);
-
-        if(ij == l->pair)
-        {
-            weight = l->weight;
-            return true;
+    for (int i = 0; i < total + 1; i++) {
+        for (int j = 0; j < size + 1; ++j) {
+            std::cout << "MC[" << i << "]" << "[" << j << "] = " << MC[i][j] << "\n";
         }
     }
-    return false;
-}
+    std::cout << "\n";
+
+        if (MC[total][size] <= 0) {return -1; }
+        return MC[total][size];
+    }
+
+
+/*
+   int total, size;
+    int coins[(size+1)];
+
+    std::cin >> total >> size;
+    int currCoin;
+    std::cin >> currCoin;
+    coins[0] = 0;
+    for (int i = 1; i < size+1; i++)
+    {
+        coins[i] = currCoin;
+        if(i % 5 == 0)
+        {
+            std::cin >> currCoin;
+        }
+    }
+
+    int MC[total + 1][size + 1];
+
+    for (int i = 0; i < total + 1; ++i) {
+        for (int j = 0; j < size + 1; ++j) {
+            MC[i][j] = 0;
+        }
+    }
+
+
+    for (int i = 1; i < total + 1; ++i) {
+        for (int j = 1; j < size + 1; ++j) {
+
+            if ((i - coins[j]) < 0) {
+                //if undef
+                MC[i][j] = MC[i - 1][j];
+            }
+            else {
+                    for(int l = 1; l <= 5; l++)
+                    {
+                        if(i - l*(coins[j] <= 0))
+                        {
+                            MC[i][j] = MC[i - 1][j];
+                        }
+                        else {
+                            MC[i][j] = std::max(
+                                    (MC[i - 1][j]),
+                                    ((l+MC[i - l * (coins[j])][j - 1])));
+                        }
+                    }
+            }
+        }
+    }
+
+    for (int i = 0; i < total + 1; i++) {
+        for (int j = 0; j < size + 1; ++j) {
+           std::cout << "MC[" << i << "]" << "[" << j << "] = " << MC[i][j] << "\n";
+        }
+        std::cout << "\n";
+    }
+
+   std::cout << "MC[" << total << "]" << "[" << size << "] = " << MC[total][size] << "\n";
+
+    if (MC[total][size] <= 0) { return -1; }
+    return MC[total][size];
+    }
+ */
